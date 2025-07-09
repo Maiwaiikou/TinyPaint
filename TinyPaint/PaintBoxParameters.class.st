@@ -8,8 +8,9 @@ Class {
 		'colorCanva',
 		'brushColorContainer'
 	],
-	#category : 'TinyPaint',
-	#package : 'TinyPaint'
+	#category : 'TinyPaint-Paint',
+	#package : 'TinyPaint',
+	#tag : 'Paint'
 }
 
 { #category : 'as yet unclassified' }
@@ -59,6 +60,14 @@ PaintBoxParameters class >> pipetteIcon [
 ]
 
 { #category : 'as yet unclassified' }
+PaintBoxParameters class >> polygonIcon [
+
+	^ ((ZnEasy getPng:
+		    'https://cdn-icons-png.flaticon.com/512/136/136834.png')
+		   scaledToSize: self defautIconSize) asElement
+]
+
+{ #category : 'as yet unclassified' }
 PaintBoxParameters class >> rainbowIcon [
 
 	^ ((ZnEasy getJpeg:
@@ -71,6 +80,14 @@ PaintBoxParameters class >> rectangleIcon [
 
 	^ ((ZnEasy getPng:
 		    'https://cdn-icons-png.flaticon.com/512/1014/1014902.png')
+		   scaledToSize: self defautIconSize) asElement
+]
+
+{ #category : 'as yet unclassified' }
+PaintBoxParameters class >> textInputIcon [
+
+	^ ((ZnEasy getPng:
+		    'https://cdn1.iconfinder.com/data/icons/interface-elements-1/24/text-field-512.png')
 		   scaledToSize: self defautIconSize) asElement
 ]
 
@@ -103,6 +120,7 @@ PaintBoxParameters >> addNewParameter: aBlock in: aContainer size: aPoint withIc
 	aContainer addChild: (BlElement new
 			 extent: aPoint;
 			 geometry: (BlRoundedRectangleGeometry cornerRadius: 3);
+			background: Color white;
 			 border: (BlBorder paint: Color lightGray width: 1);
 			 addEventHandlerOn: BlClickEvent do: aBlock;
 			 addChild: icon;
@@ -115,6 +133,7 @@ PaintBoxParameters >> addNewParameter: aBlock in: aContainer withIcon: icon [
 	aContainer addChild: (BlElement new
 			 extent: 30 @ 30;
 			 geometry: (BlRoundedRectangleGeometry cornerRadius: 3);
+			background: Color white;
 			 border: (BlBorder paint: Color lightGray width: 1);
 			 addEventHandlerOn: BlClickEvent do: aBlock;
 			 addChild: icon;
@@ -178,7 +197,7 @@ PaintBoxParameters >> initialize [
 { #category : 'initialization' }
 PaintBoxParameters >> initializeBrushColorContainer [
 
-	brushColorContainer := BlElement new background: Color white.
+	brushColorContainer := BlElement new.
 	brushColorContainer layout: BlLinearLayout new.
 	brushColorContainer constraintsDo: [ :c |
 		c horizontal fitContent.
@@ -195,17 +214,18 @@ PaintBoxParameters >> initializeBrushColorContainer [
 			brush picker setColor: brush correspondingColorSelected ]
 		in: brushColorContainer
 		size: 30 @ 65.
-	brushColorContainer childrenDo: [ :child | child constraintsDo: [ :c | c margin: (BlInsets all:3.5) ]].
+	brushColorContainer childrenDo: [ :child |
+		child constraintsDo: [ :c | c margin: (BlInsets top: 3.5 bottom: 3.5) ] ].
 	self addChild: brushColorContainer
 ]
 
 { #category : 'initialization' }
 PaintBoxParameters >> initializeBrushParametersContainer [
 
-	brushParametersContainer := BlElement new background: Color white.
+	brushParametersContainer := BlElement new.
 	brushParametersContainer layout:
-		(BlGridLayout horizontal cellSpacing: 3).
-	brushParametersContainer layout columnCount: 10.
+		(BlGridLayout horizontal cellSpacing: 4).
+	brushParametersContainer layout columnCount: 6.
 	brushParametersContainer constraintsDo: [ :c |
 		c horizontal fitContent.
 		c vertical fitContent ].
@@ -217,7 +237,8 @@ PaintBoxParameters >> initializeBrushParametersContainer [
 		addNewParameter: [
 			brush currentShape: #line.
 			brush color: self colorCanva.
-			brush picker setColor: brush color. ]
+			brush picker setColor: brush color.
+			self updateBackgroundColorContainer ]
 		in: brushParametersContainer
 		withIcon: self class ecraserIcon.
 	self
@@ -236,13 +257,21 @@ PaintBoxParameters >> initializeBrushParametersContainer [
 		addNewParameter: [ brush currentShape: #oval ]
 		in: brushParametersContainer
 		withIcon: self class circleIcon.
+	self
+		addNewParameter: [ brush currentShape: #polygon ]
+		in: brushParametersContainer
+		withIcon: self class polygonIcon.
+	self
+		addNewParameter: [ brush currentShape: #text ]
+		in: brushParametersContainer
+		withIcon: self class textInputIcon.
 	self addChild: brushParametersContainer
 ]
 
 { #category : 'initialization' }
 PaintBoxParameters >> initializeColorsContainer [
 
-	colorsContainer := BlElement new background: Color white.
+	colorsContainer := BlElement new.
 	colorsContainer layout: (BlGridLayout horizontal cellSpacing: 3).
 	colorsContainer layout columnCount: 10.
 	colorsContainer constraintsDo: [ :c |
@@ -266,7 +295,7 @@ PaintBoxParameters >> initializeColorsContainer [
 				brush picker whenLayoutedDoOnce: [
 					space extent: brush picker size.
 					space resizable: false ] ].
-			space show ]
+			space show. ]
 		in: colorsContainer
 		size: 20 @ 20
 		withIcon: self class rainbowIcon.

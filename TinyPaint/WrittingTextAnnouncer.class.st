@@ -1,5 +1,5 @@
 Class {
-	#name : 'SelectedColorChangedAnnouncer',
+	#name : 'WrittingTextAnnouncer',
 	#superclass : 'Announcement',
 	#category : 'TinyPaint-Announcement',
 	#package : 'TinyPaint',

@@ -5,10 +5,12 @@ Class {
 		'canvas',
 		'parametersContainer',
 		'brush',
-		'background'
+		'background',
+		'pointList'
 	],
-	#category : 'TinyPaint',
-	#package : 'TinyPaint'
+	#category : 'TinyPaint-Paint',
+	#package : 'TinyPaint',
+	#tag : 'Paint'
 }
 
 { #category : 'accessing' }
@@ -41,6 +43,7 @@ PaintInterface >> initialize [
 	self title: 'Paint'.
 	background := self defaultBackground.
 	brush := PaintBrush new.
+	pointList := OrderedCollection new.
 	self initializeEventsBrush.
 	self initializeCanvas.
 	self initializeParametersContainer.
@@ -62,37 +65,53 @@ PaintInterface >> initializeCanvas [
 { #category : 'initialization' }
 PaintInterface >> initializeCanvasEvents [
 
-	|lastPoint|
+	self initializeClickableEvents.
+	self initializeDraggableEvents.
+]
+
+{ #category : 'initialization' }
+PaintInterface >> initializeClickableEvents [
+
 	self root addEventHandlerOn: BlClickEvent do: [ :evt |
 		evt consume.
-		( evt position y > parametersContainer size y )ifTrue: [
-			(brush isDraggableAction: brush currentShape) ifFalse: [
-				brush doAction value: canvas value: evt ] ].
-		self invalidateAll.
-		self hostSpaceDo: [ :hs |
-			(hs renderer instVarNamed: #aeCanvas) resetFormCaches ] ].
+		evt position y > parametersContainer size y ifTrue: [
+			(brush isMultipleClickableAction: brush currentShape)
+				ifTrue: [
+					pointList add: evt position.
+					brush doAction value: canvas value: pointList.
+					pointList size > 1 ifTrue: [
+						(self isNear: pointList last from: pointList first) ifTrue: [
+							pointList removeAll ] ] ]
+				ifFalse: [
+					pointList removeAll.
+					(brush isDraggableAction: brush currentShape) ifFalse: [
+						brush doAction value: canvas value: evt ] ] ].
+		self refreshCanva ]
+]
+
+{ #category : 'initialization' }
+PaintInterface >> initializeDraggableEvents [
+
+	| lastPoint |
 	self root addEventHandlerOn: BlDragStartEvent do: [ :evt |
 		evt consume.
+		pointList removeAll.
 		lastPoint := evt position ].
 	self root addEventHandlerOn: BlDragEvent do: [ :evt |
 		(brush isDraggableAction: brush currentShape) ifTrue: [
 			brush doAction value: canvas value: lastPoint value: evt ].
-		self invalidateAll.
-		self hostSpaceDo: [ :hs |
-			(hs renderer instVarNamed: #aeCanvas) resetFormCaches ].
+		self refreshCanva.
 		lastPoint := evt position ]
 ]
 
 { #category : 'initialization' }
 PaintInterface >> initializeEventsBrush [
-
+	brush announcer when: WrittingTextAnnouncer send: #refreshCanva  to: self. 
 	self root addEventHandlerOn: BlMouseWheelEvent do: [ :evt |
 		evt consume.
 		evt isScrollDown
-			ifTrue: [
-				brush decreaseWidth.]
-			ifFalse: [
-				brush increaseWidth.] ]
+			ifTrue: [ brush decreaseWidth ]
+			ifFalse: [ brush increaseWidth ] ]
 ]
 
 { #category : 'initialization' }
@@ -104,7 +123,21 @@ PaintInterface >> initializeParametersContainer [
 	self root addChild: parametersContainer
 ]
 
+{ #category : 'initialization' }
+PaintInterface >> isNear: aPoint from: anotherPoint [
+	^ (aPoint x between: anotherPoint x - 10 and: anotherPoint x + 10)
+		  and:
+		  (aPoint y between: anotherPoint y - 10 and: anotherPoint y + 10)
+]
+
 { #category : 'accessing' }
 PaintInterface >> parametersContainer [
 	^ parametersContainer
+]
+
+{ #category : 'as yet unclassified' }
+PaintInterface >> refreshCanva [
+	self invalidateAll.
+	self hostSpaceDo: [ :hs |
+		(hs renderer instVarNamed: #aeCanvas) resetFormCaches ]
 ]
