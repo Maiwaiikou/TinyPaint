@@ -54,14 +54,23 @@ PaintInterface >> initialize [
 { #category : 'initialization' }
 PaintInterface >> initializeCanvas [
 
-	| lastPoint |
-	canvas := FormCanvas extent: 500 @ 800.
+	canvas := FormCanvas extent: 505 @ 800.
 	canvas fillColor: background.
+	self initializeCanvasEvents
+]
 
+{ #category : 'initialization' }
+PaintInterface >> initializeCanvasEvents [
+
+	|lastPoint|
 	self root addEventHandlerOn: BlClickEvent do: [ :evt |
 		evt consume.
-		(brush isDraggableAction: brush currentShape) ifFalse: [
-			brush doAction value: canvas value: evt ] ].
+		( evt position y > parametersContainer size y )ifTrue: [
+			(brush isDraggableAction: brush currentShape) ifFalse: [
+				brush doAction value: canvas value: evt ] ].
+		self invalidateAll.
+		self hostSpaceDo: [ :hs |
+			(hs renderer instVarNamed: #aeCanvas) resetFormCaches ] ].
 	self root addEventHandlerOn: BlDragStartEvent do: [ :evt |
 		evt consume.
 		lastPoint := evt position ].

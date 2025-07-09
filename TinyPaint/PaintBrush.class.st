@@ -4,10 +4,12 @@ Class {
 	#instVars : [
 		'color',
 		'secondColor',
+		'selectedColor',
 		'width',
 		'shapes',
 		'currentShape',
-		'picker'
+		'picker',
+		'announcer'
 	],
 	#category : 'TinyPaint',
 	#package : 'TinyPaint'
@@ -16,6 +18,11 @@ Class {
 { #category : 'enumerating' }
 PaintBrush >> addShape: aSymbol willDo: aBlock [
 	shapes at: aSymbol put: aBlock
+]
+
+{ #category : 'accessing' }
+PaintBrush >> announcer [
+	^ announcer ifNil: [ announcer:= Announcer new ].
 ]
 
 { #category : 'accessing' }
@@ -28,6 +35,14 @@ PaintBrush >> color [
 PaintBrush >> color: aColor [
 
 	color := aColor
+]
+
+{ #category : 'as yet unclassified' }
+PaintBrush >> correspondingColorSelected [
+
+	selectedColor = #color
+		ifTrue: [ ^ color ].
+	^ secondColor 
 ]
 
 { #category : 'accessing' }
@@ -68,8 +83,9 @@ PaintBrush >> initialize [
 	shapes := Dictionary new.
 	currentShape := #line.
 	picker := BlColorPicker new.
-	color := Color black.
+	color := picker color.
 	secondColor := Color black.
+	selectedColor := #color.
 	width := 5.
 	self initializeDefaultShapes
 ]
@@ -87,7 +103,13 @@ PaintBrush >> initializeDefaultShapes [
 	self addShape: #pipette willDo: [ :canva :anEvent |
 		| pipetteColor |
 		pipetteColor := canva form colorAt: anEvent position.
-		picker setColor:pipetteColor ].
+		picker setColor: pipetteColor.
+		self updateSelectedColor. ].
+	self addShape: #bucket willDo: [ :canva :anEvent |
+		| oldColor |
+		self updateSelectedColor.
+		oldColor := canva form colorAt: anEvent position.
+		canva form mapColor: oldColor to: color ].
 	self addShape: #rectangle willDo: [ :canva :aPoint :anEvent |
 		self updateSelectedColor.
 		canva
@@ -113,7 +135,13 @@ PaintBrush >> isAllowedShape: aSymbol [
 PaintBrush >> isDraggableAction: aSymbol [
 
 	(self isAllowedShape: aSymbol) ifFalse: [ ^ false ].
-	^ (shapes at: aSymbol) argumentCount >= 3.
+	^ (shapes at: aSymbol) argumentCount >= 3
+]
+
+{ #category : 'as yet unclassified' }
+PaintBrush >> notifySelectedColorChanged [
+	self announcer announce: SelectedColorChangedAnnouncer new.
+	
 ]
 
 { #category : 'accessing' }
@@ -131,6 +159,17 @@ PaintBrush >> secondColor: aColor [
 	secondColor := aColor
 ]
 
+{ #category : 'accessing' }
+PaintBrush >> selectedColor [
+	^ selectedColor
+]
+
+{ #category : 'accessing' }
+PaintBrush >> selectedColor: aSymbol [
+
+	selectedColor := aSymbol
+]
+
 { #category : 'as yet unclassified' }
 PaintBrush >> updateAction: aBlock shape: aSymbol [
 	(self isAllowedShape: aSymbol) ifFalse: [ ^self ].
@@ -139,7 +178,12 @@ PaintBrush >> updateAction: aBlock shape: aSymbol [
 
 { #category : 'accessing' }
 PaintBrush >> updateSelectedColor [
-	color := picker colorWithAlpha.
+
+	selectedColor = #color ifTrue: [
+		color := picker colorWithAlpha.
+		] ifFalse:[
+	secondColor := picker colorWithAlpha].
+	self notifySelectedColorChanged.
 ]
 
 { #category : 'accessing' }
