@@ -100,10 +100,14 @@ PaintBrush >> initializeClickableShapes [
 		picker setColor: pipetteColor.
 		self updateSelectedColor ].
 	self addShape: #bucket willDo: [ :canva :anEvent |
-		| oldColor |
+		| oldColor aPointsList |
 		self updateSelectedColor.
-		oldColor := canva form colorAt: anEvent position.
-		canva form mapColor: oldColor to: color ].
+		aPointsList := OrderedCollection new.
+		self sameColorArround: anEvent position canva: canva in: aPointsList.
+		canva form mapColors: aPointsList to: color.
+		aPointsList do: [ :point | canva form colorAt: point put: color ].
+		"oldColor := canva form colorAt: anEvent position.
+		canva form mapColor: oldColor to: color" ].
 	self addShape: #polygon willDo: [ :canva :aListOfPoint |
 		self updateSelectedColor.
 		canva
@@ -193,6 +197,18 @@ PaintBrush >> isMultipleClickableAction: aSymbol [
 ]
 
 { #category : 'as yet unclassified' }
+PaintBrush >> nearestPoints: aPoint [
+
+	| pointsList |
+	pointsList := OrderedCollection new.
+	aPoint x - 1 to: aPoint x + 1 do: [ :i |
+		aPoint y - 1 to: aPoint y + 1 do: [ :j | (i >= 0 and: [ j >= 0 ]) ifTrue: [
+                pointsList add: i @ j.
+            ]. ] ].
+	^ pointsList
+]
+
+{ #category : 'as yet unclassified' }
 PaintBrush >> notifySelectedColorChanged [
 	self announcer announce: SelectedColorChangedAnnouncer new.
 	
@@ -207,6 +223,29 @@ PaintBrush >> notifyWrittingText [
 { #category : 'accessing' }
 PaintBrush >> picker [
 	^ picker
+]
+
+{ #category : 'as yet unclassified' }
+PaintBrush >> sameColorArround: aPoint canva: aCanva in: aCollection [
+
+	| visited |
+	self flag: #ToMakeFaster.
+	visited := Set new.
+	(aCollection includes: aPoint) ifTrue: [ ^ aCollection ].
+	aCollection add: aPoint.
+	visited add: aPoint.
+
+	(self nearestPoints: aPoint) do: [ :anotherPoint |
+		(aCollection includes: anotherPoint) ifFalse: [
+			(aCanva form colorAt: anotherPoint) = (aCanva form colorAt: aPoint)
+				ifTrue: [
+					(visited includes: anotherPoint) ifFalse: [
+						self
+							sameColorArround: anotherPoint
+							canva: aCanva
+							in: aCollection.
+						visited add: anotherPoint ] ] ] ].
+	^ aCollection
 ]
 
 { #category : 'accessing' }

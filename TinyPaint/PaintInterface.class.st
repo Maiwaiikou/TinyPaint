@@ -49,7 +49,7 @@ PaintInterface >> initialize [
 	self initializeParametersContainer.
 	self root background: canvas form.
 	self extent:
-		canvas extent x @ (canvas extent y + parametersContainer size y).
+		canvas extent x @ (canvas extent y + parametersContainer extent y).
 	self resizable: false.
 	self show
 ]
@@ -74,7 +74,7 @@ PaintInterface >> initializeClickableEvents [
 
 	self root addEventHandlerOn: BlClickEvent do: [ :evt |
 		evt consume.
-		evt position y > parametersContainer size y ifTrue: [
+		evt position y > parametersContainer extent y ifTrue: [
 			(brush isMultipleClickableAction: brush currentShape)
 				ifTrue: [
 					pointList add: evt position.
