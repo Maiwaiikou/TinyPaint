@@ -1,12 +1,16 @@
+"
+I'm the box full of parameter, each of my container edit the brush or the canva. I divise my container in 3 parts, the parameter which edit another object like the brush [parametersContainer], the second container [brushColorContainer] to switch the color selector when we want to change the color of the border or just the initial color, the last one is all color selectable (If needed, there is a rainbow one in order to open a Color picker), on click they'll change the color of the selected color (Border or initial color) [colorsContainer].
+"
 Class {
 	#name : 'PaintBoxParameters',
 	#superclass : 'BlElement',
 	#instVars : [
 		'colorsContainer',
-		'brushParametersContainer',
+		'parametersContainer',
 		'brush',
-		'colorCanva',
-		'brushColorContainer'
+		'brushColorContainer',
+		'layersMenu',
+		'spaceParent'
 	],
 	#category : 'TinyPaint-Paint',
 	#package : 'TinyPaint',
@@ -32,6 +36,14 @@ PaintBoxParameters class >> ecraserIcon [
 
 	^ ((ZnEasy getPng:
 		    'https://cdn-icons-png.flaticon.com/512/175/175076.png')
+		   scaledToSize: self defautIconSize) asElement
+]
+
+{ #category : 'as yet unclassified' }
+PaintBoxParameters class >> layersIcon [
+
+	^ ((ZnEasy getPng:
+		    'https://cdn-icons-png.flaticon.com/512/455/455837.png')
 		   scaledToSize: self defautIconSize) asElement
 ]
 
@@ -160,23 +172,6 @@ PaintBoxParameters >> brushColorContainer [
 ]
 
 { #category : 'accessing' }
-PaintBoxParameters >> brushParametersContainer [
-
-	^ brushParametersContainer
-]
-
-{ #category : 'accessing' }
-PaintBoxParameters >> colorCanva [
-	^ colorCanva
-]
-
-{ #category : 'accessing' }
-PaintBoxParameters >> colorCanva: aColor [
-
-	colorCanva := aColor.
-]
-
-{ #category : 'accessing' }
 PaintBoxParameters >> colorsContainer [
 	^ colorsContainer
 ]
@@ -186,12 +181,16 @@ PaintBoxParameters >> initialize [
 
 	super initialize.
 	self layout: BlLinearLayout new.
-	self initializeBrushParametersContainer.
+	layersMenu := PaintLayersMenu new.
+	self zIndex: 60.
+	self initializeParametersContainer.
 	self initializeBrushColorContainer.
 	self initializeColorsContainer.
 	self background: Color lightOrange.
 	self minHeight: 70.
-	self constraintsDo: [ :c | c horizontal matchParent. c vertical fitContent ]
+	self constraintsDo: [ :c |
+		c horizontal matchParent.
+		c vertical fitContent ]
 ]
 
 { #category : 'initialization' }
@@ -217,55 +216,6 @@ PaintBoxParameters >> initializeBrushColorContainer [
 	brushColorContainer childrenDo: [ :child |
 		child constraintsDo: [ :c | c margin: (BlInsets top: 3.5 bottom: 3.5) ] ].
 	self addChild: brushColorContainer
-]
-
-{ #category : 'initialization' }
-PaintBoxParameters >> initializeBrushParametersContainer [
-
-	brushParametersContainer := BlElement new.
-	brushParametersContainer layout:
-		(BlGridLayout horizontal cellSpacing: 4).
-	brushParametersContainer layout columnCount: 6.
-	brushParametersContainer constraintsDo: [ :c |
-		c horizontal fitContent.
-		c vertical fitContent ].
-	self
-		addNewParameter: [ brush currentShape: #line ]
-		in: brushParametersContainer
-		withIcon: self class penIcon.
-	self
-		addNewParameter: [
-			brush currentShape: #line.
-			brush color: self colorCanva.
-			brush picker setColor: brush color.
-			self updateBackgroundColorContainer ]
-		in: brushParametersContainer
-		withIcon: self class ecraserIcon.
-	self
-		addNewParameter: [ brush currentShape: #pipette ]
-		in: brushParametersContainer
-		withIcon: self class pipetteIcon.
-	self
-		addNewParameter: [ brush currentShape: #bucket ]
-		in: brushParametersContainer
-		withIcon: self class paintBucketIcon.
-	self
-		addNewParameter: [ brush currentShape: #rectangle ]
-		in: brushParametersContainer
-		withIcon: self class rectangleIcon.
-	self
-		addNewParameter: [ brush currentShape: #oval ]
-		in: brushParametersContainer
-		withIcon: self class circleIcon.
-	self
-		addNewParameter: [ brush currentShape: #polygon ]
-		in: brushParametersContainer
-		withIcon: self class polygonIcon.
-	self
-		addNewParameter: [ brush currentShape: #text ]
-		in: brushParametersContainer
-		withIcon: self class textInputIcon.
-	self addChild: brushParametersContainer
 ]
 
 { #category : 'initialization' }
@@ -300,6 +250,84 @@ PaintBoxParameters >> initializeColorsContainer [
 		size: 20 @ 20
 		withIcon: self class rainbowIcon.
 	self addChild: colorsContainer
+]
+
+{ #category : 'initialization' }
+PaintBoxParameters >> initializeParametersContainer [
+
+	parametersContainer := BlElement new.
+	parametersContainer layout: (BlGridLayout horizontal cellSpacing: 4).
+	parametersContainer layout columnCount: 6.
+	parametersContainer constraintsDo: [ :c |
+		c horizontal fitContent.
+		c vertical fitContent ].
+	self
+		addNewParameter: [ brush currentShape: #line ]
+		in: parametersContainer
+		withIcon: self class penIcon.
+	self
+		addNewParameter: [
+			brush currentShape: #line.
+			brush color: spaceParent background.
+			brush picker setColor: brush color.
+			self updateBackgroundColorContainer ]
+		in: parametersContainer
+		withIcon: self class ecraserIcon.
+	self
+		addNewParameter: [ brush currentShape: #pipette ]
+		in: parametersContainer
+		withIcon: self class pipetteIcon.
+	self
+		addNewParameter: [ brush currentShape: #bucket ]
+		in: parametersContainer
+		withIcon: self class paintBucketIcon.
+	self
+		addNewParameter: [ brush currentShape: #rectangle ]
+		in: parametersContainer
+		withIcon: self class rectangleIcon.
+	self
+		addNewParameter: [ brush currentShape: #oval ]
+		in: parametersContainer
+		withIcon: self class circleIcon.
+	self
+		addNewParameter: [ brush currentShape: #polygon ]
+		in: parametersContainer
+		withIcon: self class polygonIcon.
+	self
+		addNewParameter: [ brush currentShape: #text ]
+		in: parametersContainer
+		withIcon: self class textInputIcon.
+	self
+		addNewParameter: [
+			(parent children includes: layersMenu) ifFalse: [
+				parent addChild: layersMenu ] ]
+		in: parametersContainer
+		withIcon: self class layersIcon.
+	layersMenu position:
+		parametersContainer children last positionInSpace.
+	self addChild: parametersContainer
+]
+
+{ #category : 'accessing' }
+PaintBoxParameters >> layersMenu [
+	^ layersMenu
+]
+
+{ #category : 'accessing' }
+PaintBoxParameters >> parametersContainer [
+
+	^ parametersContainer
+]
+
+{ #category : 'accessing' }
+PaintBoxParameters >> spaceParent [
+	^ spaceParent
+]
+
+{ #category : 'accessing' }
+PaintBoxParameters >> spaceParent: aBlSpace [
+
+	spaceParent := aBlSpace
 ]
 
 { #category : 'as yet unclassified' }

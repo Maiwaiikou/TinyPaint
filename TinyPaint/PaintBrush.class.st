@@ -1,3 +1,6 @@
+"
+I'm a brush for paint, I can handle multiples shapes in order to draw anything fast. I'm compose with two color, the second one is for the border of some shape. We can edit my width in order to make a big line or point.
+"
 Class {
 	#name : 'PaintBrush',
 	#superclass : 'Object',
@@ -100,12 +103,11 @@ PaintBrush >> initializeClickableShapes [
 		picker setColor: pipetteColor.
 		self updateSelectedColor ].
 	self addShape: #bucket willDo: [ :canva :anEvent |
-		| oldColor aPointsList |
+		| aPointsList |
 		self updateSelectedColor.
 		aPointsList := OrderedCollection new.
 		self sameColorArround: anEvent position canva: canva in: aPointsList.
-		canva form mapColors: aPointsList to: color.
-		aPointsList do: [ :point | canva form colorAt: point put: color ].
+		aPointsList do: [ :point | canva form colorAt: point put: color ]
 		"oldColor := canva form colorAt: anEvent position.
 		canva form mapColor: oldColor to: color" ].
 	self addShape: #polygon willDo: [ :canva :aListOfPoint |

@@ -1,3 +1,6 @@
+"
+I'm the paint interface, my background is the canva and I initialize the default parameters menu.
+"
 Class {
 	#name : 'PaintInterface',
 	#superclass : 'BlSpace',
@@ -28,6 +31,11 @@ PaintInterface >> background: aBackgroundPaint [
 PaintInterface >> canvas [
 
 	^ canvas
+]
+
+{ #category : 'accessing' }
+PaintInterface >> canvas: aCanva [
+	canvas := aCanva
 ]
 
 { #category : 'initialization' }
@@ -119,7 +127,8 @@ PaintInterface >> initializeParametersContainer [
 
 	parametersContainer := PaintBoxParameters new
 		                       brush: brush;
-		                       colorCanva: background.
+		                       spaceParent: self.
+	parametersContainer layersMenu spaceParent: self.
 	self root addChild: parametersContainer
 ]
 

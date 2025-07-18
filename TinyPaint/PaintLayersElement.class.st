@@ -103,8 +103,7 @@ PaintLayersElement >> initialize [
 	self layout: BlFrameLayout new.
 	"self layout: BlLinearLayout new.
 	self layout beHorizontal."
-	self constraintsDo: [ :c |
-		c horizontal fitContent. ].
+	self constraintsDo: [ :c | c horizontal fitContent ].
 	self height: 25.
 	self initializeVisibleButton.
 	self initializeName.
@@ -144,7 +143,9 @@ PaintLayersElement >> initializeRemoveButton [
 		saveParent := self parent.
 		self removeFromParent.
 		saveParent removeLayer: canva.
-	].
+		saveParent selectedLayer = self canva ifTrue: [
+			saveParent selectedLayer: nil.
+			saveParent switchLayer ] ].
 	self addChild: removeButton
 ]
 
@@ -188,7 +189,7 @@ PaintLayersElement >> name: aString [
 PaintLayersElement >> switchVisible [
 
 	isVisibleElement := isVisibleElement
-		             ifTrue: [ false ]
-		             ifFalse: [ true ].
-	self correspondingIcon
+		                    ifTrue: [ false ]
+		                    ifFalse: [ true ].
+	self correspondingIcon.
 ]
