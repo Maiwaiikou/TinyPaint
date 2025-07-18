@@ -2,7 +2,6 @@ Class {
 	#name : 'PaintLayersMenu',
 	#superclass : 'BlElement',
 	#instVars : [
-		'layersContainers',
 		'layers',
 		'selectedLayer'
 	],
@@ -15,18 +14,46 @@ Class {
 PaintLayersMenu >> addLayer: aCanva [
 
 	layers add: aCanva.
-	self updateLayersContainers: aCanva.
+	self addNewLayerElement: aCanva.
+]
+
+{ #category : 'accessing' }
+PaintLayersMenu >> addNewLayerElement: aCanva [
+
+	| layerElement |
+	layerElement := PaintLayersElement new
+		                canva: aCanva;
+		                name:
+			                'Layer ' , (self indexOfLayer: aCanva) asString.
+	layerElement constraintsDo: [ :c | c horizontal matchParent ].
+	layerElement
+		addEventFilterOn: BlClickEvent
+		do: [ selectedLayer := aCanva ].
+	self addChild: layerElement
 ]
 
 { #category : 'accessing' }
 PaintLayersMenu >> createLayers [
-	layersContainers removeChildren.
-	layers do: [ :layer | self updateLayersContainers:layer ].
+
+	| buttonNewLayer newCanva |
+	self removeChildren.
+	buttonNewLayer := PaintLayersElement new
+		                  name: 'New Layer';
+		                  iconButton: PaintLayersElement addingIcon;
+		                  actionIcon: [  ].
+	buttonNewLayer removeChild: (buttonNewLayer children last).
+	buttonNewLayer addEventHandlerOn: BlClickEvent do: [ :anEvent |
+		newCanva := FormCanvas extent: 505 @ 800.
+		newCanva fillColor: Color transparent.
+		self addLayer: newCanva ].
+	self addChild: buttonNewLayer.
+	layers do: [ :layer | self addNewLayerElement: layer ]
 ]
 
 { #category : 'accessing' }
 PaintLayersMenu >> indexOfLayer: aLayer [
-	layers withIndexDo: [ :ind :layer | layer = aLayer ifTrue: [ ^ ind ] ].
+
+	layers withIndexDo: [ :layer :ind | layer = aLayer ifTrue: [ ^ ind ] ].
 	^ 0
 ]
 
@@ -36,20 +63,12 @@ PaintLayersMenu >> initialize [
 	super initialize.
 	layers := OrderedCollection new.
 	self background: (Color black alpha: 0.08).
-	self initializeLayersContainers.
-	"self constraintsDo: [ :c |
+	self layout: BlLinearLayout new.
+	self layout beVertical.
+	self constraintsDo: [ :c |
 		c horizontal fitContent.
-		c vertical fitContent ]."
-]
-
-{ #category : 'initialization' }
-PaintLayersMenu >> initializeLayersContainers [
-
-	layersContainers := BlElement new.
-	layersContainers layout: BlLinearLayout new.
-	layersContainers layout beVertical.
-	layersContainers minExtent: 500 @ 500.
-	self addChild: layersContainers
+		c vertical fitContent ].
+	self createLayers.
 ]
 
 { #category : 'accessing' }
@@ -58,16 +77,17 @@ PaintLayersMenu >> layers [
 ]
 
 { #category : 'accessing' }
-PaintLayersMenu >> layers: aCollection [
+PaintLayersMenu >> layers: anOrderedCollection [
 
-	layers := aCollection.
-	self createLayers.
+	layers := anOrderedCollection.
+	self createLayers
 ]
 
-{ #category : 'as yet unclassified' }
-PaintLayersMenu >> layersContainers [
+{ #category : 'accessing' }
+PaintLayersMenu >> removeLayer: aCanva [
 
-	^ layersContainers
+	layers remove: aCanva ifAbsent: [  ].
+	self updateLayersName.
 ]
 
 { #category : 'accessing' }
@@ -75,11 +95,13 @@ PaintLayersMenu >> selectedLayer [
 	^ selectedLayer
 ]
 
-{ #category : 'accessing' }
-PaintLayersMenu >> updateLayersContainers: aNewLayer [
-	|layerElement|
-	layerElement := PaintLayersElement new canva: aNewLayer; name: ('Layer ', (self indexOfLayer:aNewLayer) asString ).
-	layersContainers addChild: layerElement.
+{ #category : 'as yet unclassified' }
+PaintLayersMenu >> updateLayersName [
+	| childrenCopy |
+	childrenCopy := children copy.
+	childrenCopy removeAt: 1.
+	childrenCopy do: [ :layer | layer name:
+			                'Layer ' , (self indexOfLayer: layer canva) asString. ].
 
 	
 ]
